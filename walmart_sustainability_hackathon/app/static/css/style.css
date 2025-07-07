@@ -1,0 +1,845 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f6f8;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Header and Navigation */
+header {
+    background-color: #0071ce; /* Walmart Blue */
+    color: #fff;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* Slightly more pronounced shadow */
+    position: sticky; /* Make header sticky */
+    top: 0;
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+nav {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav .logo {
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+nav ul li {
+    margin-left: 20px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+nav ul li a:hover {
+    background-color: #005ea0; /* Darker Walmart Blue */
+    transform: translateY(-2px);
+}
+nav ul li a.active {
+    background-color: #ffc220; /* Walmart Yellow for active */
+    color: #004c97; /* Dark Blue text for active yellow */
+    font-weight: bold;
+}
+
+
+/* Main Content Area */
+main {
+    min-height: calc(100vh - 160px); /* Adjust based on header/footer height */
+}
+
+.feature-container {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    color: #0071ce;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Form Controls */
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.controls-grid div {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9em;
+    color: #555;
+}
+
+.styled-select, input[type="number"], input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.styled-select:focus, input[type="number"]:focus, input[type="text"]:focus {
+    border-color: #0071ce;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 113, 206, 0.2);
+}
+
+/* Buttons */
+.cta-button {
+    background-color: #ffc220; /* Walmart Yellow */
+    color: #333;
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.cta-button:hover {
+    background-color: #e6b01e;
+}
+
+/* Metrics Display */
+.metrics-display {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.metric-card {
+    background-color: #e9f5ff; /* Light blue */
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+    flex: 1;
+    min-width: 180px;
+    border: 1px solid #cce7ff;
+}
+
+.metric-card h4 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1em;
+    color: #005ea0;
+}
+
+.metric-card p {
+    font-size: 1.4em;
+    font-weight: bold;
+    margin: 0;
+    color: #0071ce;
+}
+
+/* Chart Container */
+.chart-container {
+    width: 100%;
+    min-height: 300px; /* Ensure it has some height */
+    height: 400px; /* Adjust as needed */
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative; /* For Chart.js responsiveness */
+}
+
+
+/* Scenario Panel */
+.scenario-panel {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 20px;
+    border: 1px solid #e0e0e0;
+}
+
+.scenario-panel h3 {
+    margin-top: 0;
+    color: #005ea0;
+}
+
+.scenario-panel div {
+    margin-bottom: 15px;
+}
+
+.scenario-panel label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* Influencing Factors Panel */
+.influencing-factors-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #eef7ff;
+    border: 1px solid #cce7ff;
+    border-radius: 6px;
+}
+.influencing-factors-panel h4 {
+    margin-top: 0;
+    color: #005ea0;
+}
+.influencing-factors-panel ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+}
+
+/* --- GreenShelf Specific Styles --- */
+.store-controls {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f0f8ff; /* AliceBlue */
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.store-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    padding: 20px;
+    background-color: #e9ecef; /* Lighter grey for background */
+    border-radius: 8px;
+    min-height: 150px; /* Ensure it has some height even when empty */
+    margin-bottom: 20px;
+}
+
+.shelf-box {
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.shelf-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.shelf-name {
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+.shelf-status-indicator {
+    font-size: 0.8em;
+    text-transform: capitalize;
+}
+
+
+/* Shelf status colors */
+.shelf-green { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+.shelf-yellow { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
+.shelf-orange { background-color: #ffe8cc; border-color: #ffdAB0; color: #c06000; }
+.shelf-red { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+.shelf-darkred { background-color: #e0c2c4; border-color: #d3b0b3; color: #58151c; } /* Spoiled */
+.shelf-grey { background-color: #e9ecef; border-color: #ced4da; color: #495057; } /* Unknown / Empty */
+
+.legend {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.legend h4 {
+    margin: 0 10px 0 0;
+    font-size: 0.9em;
+}
+.legend-item {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    border: 1px solid transparent;
+}
+.legend-green { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+.legend-yellow { background-color: #fff3cd; border-color: #ffeeba; color: #856404; }
+.legend-orange { background-color: #ffe8cc; border-color: #ffdAB0; color: #c06000; }
+.legend-red { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+.legend-darkred { background-color: #e0c2c4; border-color: #d3b0b3; color: #58151c; }
+.legend-grey { background-color: #e9ecef; border-color: #ced4da; color: #495057; }
+
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Dim background */
+    display: flex; /* Used to center modal content */
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: auto;
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 700px; /* Max width for shelf detail */
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideInModal 0.3s ease-out;
+}
+
+@keyframes slideInModal {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.close-button {
+    color: #aaa;
+    float: right; /* Old style, consider flexbox for modern layout */
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #333;
+    text-decoration: none;
+}
+
+#shelf-detail-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.product-instance-card {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.product-instance-card h5 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #0071ce;
+}
+.product-instance-card p {
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+.product-instance-card strong {
+    color: #333;
+}
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+/* Match status colors for indicators */
+.status-green { background-color: #28a745; } /* Bootstrap success green */
+.status-yellow { background-color: #ffc107; } /* Bootstrap warning yellow */
+.status-orange { background-color: #fd7e14; } /* Bootstrap orange */
+.status-red { background-color: #dc3545; } /* Bootstrap danger red */
+.status-darkred { background-color: #8B0000; } /* DarkRed for spoiled */
+.status-grey { background-color: #6c757d; } /* Bootstrap secondary grey */
+
+#item-detail-content p {
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+#item-detail-content strong {
+    display: inline-block;
+    width: 180px; /* For alignment */
+    color: #555;
+}
+
+/* --- Sourcing Platform Specific Styles --- */
+#sourcing-feature .controls-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjust for SKU, Batch ID, Button */
+    align-items: end; /* Align button nicely with inputs */
+}
+
+
+.product-header-sourcing {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.product-header-sourcing img {
+    object-fit: cover; /* Ensure image looks good */
+}
+
+.product-header-sourcing h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #004c97; /* Darker Walmart blue */
+}
+
+.sourcing-layout {
+    display: flex;
+    flex-wrap: wrap; /* Allow sidebar to wrap on smaller screens */
+    gap: 25px;
+}
+
+.sourcing-main-content {
+    flex: 2; /* Takes 2/3 of the space */
+    min-width: 300px; /* Ensure it doesn't get too squished */
+}
+
+.sourcing-sidebar {
+    flex: 1; /* Takes 1/3 of the space */
+    min-width: 280px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.sourcing-sidebar h4, .sourcing-main-content h4 {
+    color: #0071ce;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Timeline Styles */
+.timeline-container {
+    position: relative;
+    padding-left: 25px; /* Space for the timeline line */
+    margin-left: 5px;
+}
+
+.timeline-container::before { /* The vertical line */
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 5px;
+    bottom: 5px;
+    width: 3px;
+    background-color: #0071ce; /* Walmart Blue */
+    border-radius: 2px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 6px;
+    border: 1px solid #e7e7e7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.timeline-item::before { /* The dot on the timeline */
+    content: '';
+    position: absolute;
+    left: -33px; /* Adjust to center on the line: -(padding-left of container / 2) - (width of dot / 2) + (line width / 2) approx */
+    top: 18px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: #ffc220; /* Walmart Yellow */
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #0071ce; /* Outer ring */
+    z-index: 1;
+}
+
+.timeline-item h5 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #005ea0;
+    display: flex;
+    align-items: center;
+}
+.timeline-item h5 .timeline-icon {
+    margin-right: 8px;
+    font-size: 1.2em; /* For font icons, if used */
+}
+.timeline-item .date-location {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 8px;
+}
+.timeline-item .description {
+    font-size: 0.95em;
+    margin-bottom: 10px;
+}
+.timeline-item .media img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+
+/* Sources Spotlight */
+.sources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.source-card {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e7e7e7;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.source-card img.source-image {
+    width: 100%;
+    height: 150px; /* Fixed height for consistency */
+    object-fit: cover;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.source-card h5 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    color: #005ea0;
+}
+.source-card p {
+    font-size: 0.9em;
+    margin-bottom: 8px;
+}
+.source-card .certifications img {
+    height: 30px;
+    margin-right: 5px;
+    margin-top: 5px;
+    vertical-align: middle;
+}
+
+/* Impact Metrics & Certifications in Sidebar */
+.impact-metrics-card p, .certifications-list p, #additional-links-sourcing p {
+    font-size: 0.95em;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+.impact-metrics-card strong, .certifications-list strong, #additional-links-sourcing strong {
+    color: #333;
+}
+.certifications-list img {
+    height: 40px;
+    margin: 5px 10px 5px 0;
+    vertical-align: middle;
+}
+#additional-links-sourcing a {
+    color: #0071ce;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 5px;
+}
+#additional-links-sourcing a:hover {
+    text-decoration: underline;
+}
+
+#sourcing-map .leaflet-popup-content-wrapper {
+    border-radius: 6px;
+}
+#sourcing-map .leaflet-popup-content p {
+    margin: 5px 0;
+}
+
+/* --- Sustainability Hub Specific Styles --- */
+.hub-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f0f8ff; /* AliceBlue */
+    border-radius: 6px;
+}
+
+#hub-store-title {
+    text-align: center;
+    color: #004c97; /* Darker Walmart Blue */
+    margin-bottom: 5px;
+}
+
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.kpi-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    border-left: 5px solid #0071ce; /* Default border color */
+}
+
+.kpi-card h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.kpi-card .kpi-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #0071ce; /* Walmart Blue */
+    margin-bottom: 8px;
+}
+
+.kpi-card .kpi-trend, .kpi-card .kpi-target {
+    font-size: 0.85em;
+    color: #555;
+    margin-bottom: 4px;
+}
+.kpi-card .kpi-trend .arrow-up { color: #dc3545; } /* Red for bad trend (e.g. consumption up) */
+.kpi-card .kpi-trend .arrow-down { color: #28a745; } /* Green for good trend (e.g. consumption down) */
+
+
+/* Status colors for KPI cards */
+.kpi-card.status-green { border-left-color: #28a745; }
+.kpi-card.status-yellow { border-left-color: #ffc107; }
+.kpi-card.status-red { border-left-color: #dc3545; }
+.kpi-card.status-grey { border-left-color: #6c757d; }
+
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.chart-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+.chart-card h4 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #005ea0;
+}
+.chart-wrapper {
+    height: 280px; /* Fixed height for charts */
+    position: relative;
+}
+
+
+.bottom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.panel-card {
+    background-color: #fdfdff; /* Slightly off-white */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.07);
+    border: 1px solid #f0f0f0;
+}
+
+.panel-card h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #005ea0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+#hub-alerts-list, #hub-leaderboard-list, #hub-tips-list {
+    list-style-type: none;
+    padding-left: 0;
+    max-height: 250px; /* Scrollable lists */
+    overflow-y: auto;
+}
+
+#hub-alerts-list li, #hub-leaderboard-list li, #hub-tips-list li {
+    padding: 8px 5px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+#hub-alerts-list li:last-child, #hub-leaderboard-list li:last-child, #hub-tips-list li:last-child {
+    border-bottom: none;
+}
+
+#hub-alerts-list .severity-High { color: #721c24; font-weight: bold; }
+#hub-alerts-list .severity-Medium { color: #c06000; }
+#hub-alerts-list .severity-Low { color: #155724; }
+#hub-alerts-list .alert-title { font-weight: bold; }
+#hub-alerts-list .alert-desc { font-size: 0.9em; color: #555; display: block; margin-top: 3px;}
+#hub-alerts-list .alert-meta { font-size: 0.8em; color: #777; display: block; margin-top: 3px;}
+
+
+#hub-leaderboard-list .rank {
+    font-weight: bold;
+    margin-right: 8px;
+    color: #0071ce;
+}
+#hub-leaderboard-list .store-name {
+    font-weight: 500;
+}
+#hub-leaderboard-list .score {
+    float: right; /* Simple alignment */
+    color: #005ea0;
+    font-weight: bold;
+}
+#hub-leaderboard-list .badges img { /* If using image badges */
+    height: 16px;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+#hub-leaderboard-list .badges span { /* If using text badges */
+    font-size: 0.75em;
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+#hub-tips-list li {
+    padding-left: 20px;
+    position: relative;
+}
+#hub-tips-list li::before {
+    content: "💡"; /* Lightbulb emoji */
+    position: absolute;
+    left: 0;
+    top: 6px; /* Adjust alignment */
+}
+
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #333;
+    color: #fff;
+    margin-top: 30px;
+}
+
+/* General Utility */
+.hidden {
+    display: none;
+}
+
+/* Basic responsive considerations */
+@media (max-width: 768px) {
+    .controls-grid {
+        grid-template-columns: 1fr; /* Stack controls on smaller screens */
+    }
+    nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    nav ul {
+        margin-top: 10px;
+        flex-direction: column;
+        width: 100%;
+    }
+    nav ul li {
+        margin-left: 0;
+        margin-bottom: 5px;
+        width: 100%;
+    }
+    nav ul li a {
+        display: block;
+        text-align: center;
+    }
+    .metrics-display {
+        flex-direction: column;
+    }
+    .metric-card {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+```

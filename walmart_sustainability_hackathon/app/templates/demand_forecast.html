@@ -1,0 +1,79 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container feature-container">
+    <h2>AI-Powered Demand Prediction</h2>
+    <p>Select store, product, and forecast horizon to view predictions. Adjust scenario parameters to see their impact.</p>
+
+    <div class="controls-grid">
+        <div>
+            <label for="store-select">Store:</label>
+            <select id="store-select" class="styled-select">
+                <option value="">Loading stores...</option>
+            </select>
+        </div>
+        <div>
+            <label for="category-select">Product Category:</label>
+            <select id="category-select" class="styled-select">
+                <option value="">Select store first...</option>
+            </select>
+        </div>
+        <div>
+            <label for="product-select">Product (SKU):</label>
+            <select id="product-select" class="styled-select">
+                <option value="">Select category first...</option>
+            </select>
+        </div>
+        <div>
+            <label for="horizon-select">Forecast Horizon:</label>
+            <select id="horizon-select" class="styled-select">
+                <option value="7" selected>Next 7 Days</option>
+                <option value="14">Next 14 Days</option>
+                <option value="30">Next 30 Days</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="metrics-display">
+        <div class="metric-card">
+            <h4>Current Stock</h4>
+            <p id="current-stock">-</p>
+        </div>
+        <div class="metric-card">
+            <h4>Avg. Daily Sales (Last 30d)</h4>
+            <p id="avg-daily-sales">-</p>
+        </div>
+        <div class="metric-card">
+            <h4>Predicted Waste Risk (7d)</h4>
+            <p id="predicted-waste-risk">-</p>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="demandForecastChart"></canvas>
+    </div>
+
+    <div class="scenario-panel">
+        <h3>What-If Analysis (Scenario Planning)</h3>
+        <div>
+            <label for="event-impact-slider">Local Event Impact Multiplier (e.g., 1.0 for none, 1.2 for +20%):</label>
+            <input type="number" id="event-impact-slider" value="1.0" step="0.1" min="0.5" max="2.0">
+        </div>
+        <div>
+            <label for="temp-adjust-slider">Temperature Adjustment (°C from baseline):</label>
+            <input type="number" id="temp-adjust-slider" value="0" step="1" min="-10" max="10">
+        </div>
+        <button id="apply-scenario-btn" class="cta-button">Apply Scenario & Refresh Forecast</button>
+    </div>
+     <div id="influencing-factors" class="influencing-factors-panel">
+        <h4>Key Influencing Factors:</h4>
+        <ul id="factors-list">
+            <li>Baseline historical trends.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/demand_forecast.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container feature-container" id="sourcing-feature">
+    <h2>Ethical & Sustainable Sourcing Platform</h2>
+    <p>Discover the story behind your products. Enter a SKU and a (mock) Batch ID to see its journey.</p>
+
+    <div class="controls-grid">
+        <div>
+            <label for="sourcing-sku-select">Product SKU:</label>
+            <!-- For demo, pre-populate with SKUs that have mock data -->
+            <select id="sourcing-sku-select" class="styled-select">
+                <option value="SKU_DAIRY_MILK1G">Colombian Supremo Coffee (SKU_DAIRY_MILK1G)</option>
+                <option value="SKU_FRUIT_BANANAS">Organic Fairtrade Bananas (SKU_FRUIT_BANANAS)</option>
+                <option value="SKU_OTHER_DEMO">Other Product (SKU_OTHER_DEMO)</option>
+            </select>
+        </div>
+        <div>
+            <label for="sourcing-batch-id">Batch ID (e.g., BATCH_CM007):</label>
+            <input type="text" id="sourcing-batch-id" class="styled-select" value="BATCH_CM007">
+        </div>
+        <div>
+            <button id="fetch-sourcing-info-btn" class="cta-button">Trace Product</button>
+        </div>
+    </div>
+
+    <div id="sourcing-results-container" class="hidden">
+        <div class="product-header-sourcing">
+            <img id="product-image-sourcing" src="#" alt="Product Image" style="max-width: 150px; border-radius: 8px; margin-right: 20px;"/>
+            <div>
+                <h3 id="product-name-sourcing">Product Name</h3>
+                <p id="product-main-story-sourcing">Main product story...</p>
+            </div>
+        </div>
+
+        <div class="sourcing-layout">
+            <div class="sourcing-main-content">
+                <h4>Product Journey</h4>
+                <div id="journey-timeline" class="timeline-container">
+                    <!-- Journey steps will be populated here -->
+                </div>
+
+                <h4>Key Sources</h4>
+                <div id="sources-spotlight" class="sources-grid">
+                    <!-- Source details will be populated here -->
+                </div>
+            </div>
+
+            <aside class="sourcing-sidebar">
+                <h4>Impact Metrics</h4>
+                <div id="impact-metrics-sourcing" class="impact-metrics-card">
+                    <!-- Impact metrics will be populated here -->
+                </div>
+
+                <h4>Certifications</h4>
+                <div id="certifications-sourcing" class="certifications-list">
+                    <!-- Certifications will be populated here -->
+                </div>
+
+                <h4>Additional Links</h4>
+                <div id="additional-links-sourcing">
+                    <!-- Links will be populated here -->
+                </div>
+
+                <h4>Interactive Map</h4>
+                <div id="sourcing-map" style="height: 300px; width: 100%; border-radius: 6px; border: 1px solid #ccc;">
+                    <!-- Leaflet map will be initialized here -->
+                </div>
+            </aside>
+        </div>
+    </div>
+    <div id="sourcing-error-container" class="hidden" style="color: red; margin-top: 15px;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Leaflet CSS and JS are already in index.html -->
+<script src="{{ url_for('static', filename='js/sourcing.js') }}"></script>
+{% endblock %}

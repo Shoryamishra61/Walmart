@@ -1,0 +1,59 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container feature-container" id="greenshelf-feature">
+    <h2>GreenShelf Live View</h2>
+    <p>Real-time (simulated) overview of shelf and product freshness status. Click on a shelf to see details.</p>
+
+    <div class="store-controls">
+        <label for="gs-store-select">Select Store:</label>
+        <select id="gs-store-select" class="styled-select">
+            <!-- Options will be populated by JS -->
+            <option value="">Loading Stores...</option>
+        </select>
+        <button id="refresh-greenshelf-view" class="cta-button" style="margin-left: 10px;">Refresh View</button>
+    </div>
+
+    <div id="store-layout-container">
+        <h3>Store Layout - Shelf Status</h3>
+        <div id="store-layout" class="store-layout-grid">
+            <!-- Shelves will be dynamically generated here -->
+            <p>Select a store to view layout.</p>
+        </div>
+        <div class="legend">
+            <h4>Legend:</h4>
+            <span class="legend-item legend-green">Normal</span>
+            <span class="legend-item legend-yellow">Approaching</span>
+            <span class="legend-item legend-orange">Nearing Expiry</span>
+            <span class="legend-item legend-red">Critical / Donate</span>
+            <span class="legend-item legend-darkred">Spoiled</span>
+            <span class="legend-item legend-grey">Unknown / Empty</span>
+        </div>
+    </div>
+
+    <div id="shelf-detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="shelf-detail-title">Shelf Details</h3>
+            <div id="shelf-detail-items" class="shelf-items-grid">
+                <!-- Product items will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="item-detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h3 id="item-detail-title">Product Instance Details</h3>
+            <div id="item-detail-content">
+                <!-- Product instance details will be shown here -->
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/greenshelf.js') }}"></script>
+{% endblock %}
