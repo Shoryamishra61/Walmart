@@ -1,0 +1,101 @@
+/* File: frontend/src/App.css */
+:root {
+  --walmart-blue: #0071ce;
+  --walmart-dark-blue: #004c91;
+  --walmart-yellow: #ffc220;
+  --success-green: #2a9d8f;
+  --danger-red: #e76f51;
+  --warning-yellow: #e9c46a;
+}
+
+/* Light Theme (Default) */
+html[data-theme='light'] {
+  --background-primary: #f4f6f8;
+  --background-secondary: #ffffff;
+  --text-primary: #1d2d35;
+  --text-secondary: #5a7184;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark Theme */
+html[data-theme='dark'] {
+  --background-primary: #1a202c;
+  --background-secondary: #2d3748;
+  --text-primary: #edf2f7;
+  --text-secondary: #a0aec0;
+  --border-color: #4a5568;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2rem;
+  color: var(--text-primary);
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.chart-container {
+    background-color: var(--background-secondary);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    margin-top: 2rem;
+}
+
+/* Table styles for Live Operations */
+.live-inventory-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.live-inventory-panel th, .live-inventory-panel td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.live-inventory-panel th {
+  background-color: var(--background-primary);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Status-based row styling */
+.status-nearing-expiry {
+  background-color: rgba(233, 196, 106, 0.1);
+}
+.status-donation-alert {
+  background-color: rgba(231, 111, 81, 0.1);
+  font-weight: 500;
+}

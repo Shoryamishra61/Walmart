@@ -1,0 +1,15 @@
+graph TD
+    A[Frontend: 3D/Interactive UI] -- REST/GraphQL API --> B(API Gateway)
+
+    B -- Routes to --> C{AI-Powered Demand Prediction}
+    B -- Routes to --> D{GreenShelf: Expiry & Pricing}
+    B -- Routes to --> E{Customer Card: Personalization}
+    B -- Routes to --> F{Centralized Operations Hub}
+
+    C -- Fetches Data --> G[(Database: Time-Series & Relational)]
+    D -- Manages --> G
+    E -- Manages --> G
+    F -- Visualizes Data from --> G
+
+    D -- Sends Alerts --> H(Notification Service)
+    H -- Pushes to --> I{Partner NGOs & Store Managers} 

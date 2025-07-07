@@ -1,0 +1,18 @@
+.live-operations-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.store-visualization-panel, .live-inventory-panel {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.store-visualization-panel h3, .live-inventory-panel h3 {
+     margin-top: 0;
+    color: var(--walmart-dark-blue);
+}

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=walmart
+      - POSTGRES_PASSWORD=sparkathon
+      - POSTGRES_DB=sustainability_hub
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  demand-forecasting:
+    build: ./services/demand-forecasting
+    ports:
+      - "8000:8000"
+    container_name: demand-forecasting-api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  greenshelf-service:
+    build: ./services/greenshelf-service
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgres://walmart:sparkathon@postgres-db:5432/sustainability_hub
+    container_name: greenshelf-service
+    depends_on:
+      - postgres-db
+
+  customer-service:
+    build: ./services/customer-service
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgres://walmart:sparkathon@postgres-db:5432/sustainability_hub
+    container_name: customer-service
+    depends_on:
+      - postgres-db
+
+  # --- NEW SERVICE ---
+  circularity-service:
+    build: ./services/circularity-service
+    ports:
+      - "3003:3003"
+    environment:
+      - DATABASE_URL=postgres://walmart:sparkathon@postgres-db:5432/sustainability_hub
+    container_name: circularity-service
+    depends_on:
+      - postgres-db

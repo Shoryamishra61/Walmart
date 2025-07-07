@@ -1,0 +1,14 @@
+{
+    "name": "circularity-service",
+    "version": "1.0.0",
+    "description": "Service for managing recycling and circular economy features",
+    "main": "src/server.js",
+    "scripts": {
+      "start": "node src/server.js"
+    },
+    "dependencies": {
+      "cors": "^2.8.5",
+      "express": "^4.19.2",
+      "pg": "^8.12.0"
+    }
+  }
