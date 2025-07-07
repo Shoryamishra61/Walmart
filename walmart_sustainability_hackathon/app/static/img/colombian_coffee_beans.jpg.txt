@@ -1,0 +1,2 @@
+This is a placeholder for colombian_coffee_beans.jpg.
+In a real project, this would be an image file.

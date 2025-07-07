@@ -1,0 +1,2 @@
+This is a placeholder for hacienda_la_esperanza.jpg.
+In a real project, this would be an image file.

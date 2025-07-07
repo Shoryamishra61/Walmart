@@ -1,0 +1,2 @@
+This is a placeholder for fair_trade_logo.png.
+In a real project, this would be an image file.

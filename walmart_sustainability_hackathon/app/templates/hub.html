@@ -1,0 +1,113 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div class="container feature-container" id="hub-feature">
+    <h2>Sustainability Command Center</h2>
+
+    <div class="hub-controls">
+        <div>
+            <label for="hub-store-select">Store:</label>
+            <select id="hub-store-select" class="styled-select">
+                <!-- Stores populated by JS -->
+                <option value="">Loading stores...</option>
+            </select>
+        </div>
+        <div>
+            <label for="hub-period-select">Period:</label>
+            <select id="hub-period-select" class="styled-select">
+                <option value="daily" selected>Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+        </div>
+        <button id="hub-refresh-btn" class="cta-button">Refresh Data</button>
+    </div>
+
+    <div id="hub-dashboard-content" class="hidden">
+        <h3 id="hub-store-title">Store Sustainability Overview</h3>
+        <p id="hub-period-label" style="text-align: center; font-style: italic; margin-bottom: 20px;"></p>
+
+        <!-- KPIs Row -->
+        <div class="kpi-grid">
+            <div class="kpi-card" id="kpi-waste-diversion">
+                <h4>Waste Diversion Rate</h4>
+                <div class="kpi-value">- %</div>
+                <div class="kpi-trend">Trend: -</div>
+                <div class="kpi-target">Target: - %</div>
+            </div>
+            <div class="kpi-card" id="kpi-energy">
+                <h4>Energy Consumption</h4>
+                <div class="kpi-value">- kWh</div>
+                <div class="kpi-trend">Trend: -</div>
+                <div class="kpi-target">Target: - kWh</div>
+            </div>
+            <div class="kpi-card" id="kpi-water">
+                <h4>Water Usage</h4>
+                <div class="kpi-value">- Liters</div>
+                <div class="kpi-trend">Trend: -</div>
+                <div class="kpi-target">Target: - Liters</div>
+            </div>
+            <div class="kpi-card" id="kpi-carbon">
+                <h4>Carbon Footprint</h4>
+                <div class="kpi-value">- Tonnes CO₂e</div>
+                <div class="kpi-trend">Trend: -</div>
+                <div class="kpi-target">Target: - Tonnes CO₂e</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h4>Waste Breakdown</h4>
+                <div class="chart-wrapper">
+                    <canvas id="wasteBreakdownChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h4>Energy Consumption Trend</h4>
+                 <div class="chart-wrapper">
+                    <canvas id="energyTrendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h4>Water Usage Trend</h4>
+                 <div class="chart-wrapper">
+                    <canvas id="waterTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts and Gamification Row -->
+        <div class="bottom-grid">
+            <div class="panel-card" id="hub-alerts-panel">
+                <h4>Active Alerts</h4>
+                <ul id="hub-alerts-list">
+                    <li>No active alerts.</li>
+                </ul>
+            </div>
+            <div class="panel-card" id="hub-gamification-panel">
+                <h4>Gamification Leaderboard</h4>
+                <ol id="hub-leaderboard-list">
+                    <li>Loading leaderboard...</li>
+                </ol>
+            </div>
+             <div class="panel-card" id="hub-tips-panel">
+                <h4>Sustainability Tips</h4>
+                <ul id="hub-tips-list">
+                    <li>Loading tips...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div id="hub-loading-message" style="text-align:center; padding: 20px;">
+        <p>Please select a store and period to view the dashboard.</p>
+    </div>
+    <div id="hub-error-message" class="hidden" style="color: red; text-align:center; padding: 20px;"></div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js is already in index.html -->
+<script src="{{ url_for('static', filename='js/hub.js') }}"></script>
+{% endblock %}
