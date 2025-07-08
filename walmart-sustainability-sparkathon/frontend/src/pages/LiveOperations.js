@@ -9,6 +9,8 @@ const socket = io('http://localhost:3001');
 function LiveOperations() {
   const [inventory, setInventory] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [errorInitial, setErrorInitial] = useState(null);
 
   useEffect(() => {
     // Listen for real-time updates from the smart shelves
@@ -18,13 +20,18 @@ function LiveOperations() {
 
     // Fetch the initial state of the inventory
     const fetchInitialInventory = async () => {
+        setIsLoadingInitial(true);
+        setErrorInitial(null);
         try {
             const res = await fetch('http://localhost:3001/api/inventory');
+            if (!res.ok) throw new Error(`Failed to fetch initial inventory: ${res.statusText}`);
             const data = await res.json();
             setInventory(data.map(item => ({...item, price: parseFloat(item.price)})));
         } catch (error) {
             console.error("Error fetching initial inventory:", error);
+            setErrorInitial(error.message);
         }
+        setIsLoadingInitial(false);
     }
     fetchInitialInventory();
 
@@ -82,7 +89,16 @@ function LiveOperations() {
                     </tr>
                   </thead>
                   <tbody>
-                    {inventory.map(item => (
+                    {isLoadingInitial && (
+                        <tr><td colSpan="5" style={{ textAlign: 'center' }}>Loading live inventory...</td></tr>
+                    )}
+                    {errorInitial && (
+                        <tr><td colSpan="5" style={{ textAlign: 'center', color: 'red' }}>Error: {errorInitial}</td></tr>
+                    )}
+                    {!isLoadingInitial && !errorInitial && inventory.length === 0 && (
+                        <tr><td colSpan="5" style={{ textAlign: 'center' }}>No inventory items to display.</td></tr>
+                    )}
+                    {!isLoadingInitial && !errorInitial && inventory.map(item => (
                       <tr key={item.id} className={`status-${item.status.replace(/\s+/g, '-').toLowerCase()}`}>
                         <td>{item.name}</td>
                         <td>${item.price.toFixed(2)}</td>
