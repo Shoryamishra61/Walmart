@@ -16,3 +16,21 @@
      margin-top: 0;
     color: var(--walmart-dark-blue);
 }
+
+.nearing-expiry {
+  color: orange;
+  font-weight: bold;
+}
+
+/* Status-specific row styles */
+.status-discount {
+  background-color: #fff3cd; /* Light yellow for discount */
+}
+.status-donation-alert {
+  background-color: #f8d7da; /* Light red for donation alert */
+  font-weight: bold; /* Make text bolder for donation items */
+}
+.status-donation-alert td {
+  /* Example: Darker text for better contrast on light red if needed */
+  /* color: #721c24; */
+}

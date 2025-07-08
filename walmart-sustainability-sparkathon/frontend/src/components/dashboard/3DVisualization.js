@@ -1,239 +1,351 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import gsap from 'gsap';
-import './3DVisualization.css'; // We'll create this for tooltip styling
+import './3DVisualization.css';
 
 const ThreeDVisualization = ({ inventory }) => {
-    const mountRef = useRef(null); // Ref for the div where the canvas will be mounted
-    const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 }); // State for tooltip visibility, content, and position
-    const raycaster = new THREE.Raycaster(); // For mouse picking/hover detection
-    const mouse = new THREE.Vector2(); // Stores normalized mouse coordinates
-    let INTERSECTED; // To keep track of the currently hovered object to manage highlighting
+    const mountRef = useRef(null);
+    const [tooltip, setTooltip] = useState({ visible: false, content: '', x: 0, y: 0 });
 
+    const sceneRef = useRef(null);
+    const cameraRef = useRef(null);
+    const rendererRef = useRef(null);
+    const controlsRef = useRef(null);
+    const productHotspotsRef = useRef(null);
+    const loadedProductModels = useRef([]);
+    const aislesRef = useRef([]);
+    const raycasterRef = useRef(new THREE.Raycaster());
+    const mouseRef = useRef(new THREE.Vector2());
+    const intersectedRef = useRef(null); // Using ref for INTERSECTED
+
+    const [assetsReady, setAssetsReady] = useState(false);
+
+    // Effect for one-time scene setup
     useEffect(() => {
-        // Scene setup
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf0f0f0); // Light grey background for better contrast
+        sceneRef.current = new THREE.Scene();
+        productHotspotsRef.current = new THREE.Group();
+        sceneRef.current.add(productHotspotsRef.current);
 
-        // Camera setup
-        const camera = new THREE.PerspectiveCamera(75, 500 / 400, 0.1, 1000); // FOV, Aspect Ratio (temp), Near, Far
-        
-        // Renderer setup
-        const renderer = new THREE.WebGLRenderer({ antialias: true }); // Enable antialiasing for smoother edges
-        const container = mountRef.current;
-        let width = container.clientWidth;
-        let height = Math.min(container.clientHeight || 400, 600); // Ensure clientHeight is available or default
-        renderer.setSize(width, height);
-        container.innerHTML = '';
-        container.appendChild(renderer.domElement);
+        const scene = sceneRef.current;
+        const productHotspots = productHotspotsRef.current;
 
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-
-        // OrbitControls setup for camera interaction
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true; // Smooths camera movement, requires controls.update() in animation loop
-        controls.dampingFactor = 0.05; // Damping inertia
-        controls.screenSpacePanning = false; // Restricts panning to the XY plane in the camera's view
-        controls.minDistance = 2; // Minimum zoom distance
-        controls.maxDistance = 20; // Maximum zoom distance
-        controls.maxPolarAngle = Math.PI / 2 - 0.05; // Prevents camera from going below the ground plane
-        controls.target.set(0, 0.5, 0); // Point the camera orbits around (center of the scene vertically)
-
-        // Floor plane
-        const floorGeometry = new THREE.PlaneGeometry(10, 10); // Defines the size of the floor
-        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, side: THREE.DoubleSide }); // Grey color, visible from both sides
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
-        floor.position.y = -0.5; // Position it slightly below the origin to act as a ground
-        scene.add(floor);
-
-        // Shelf properties - constants for defining shelf dimensions and appearance
-        const shelfDepth = 1;
-        const shelfHeight = 2;
-        const shelfLength = 5;
-        const shelfThickness = 0.1;
-        const shelfColor = 0xaaaaaa; // Light grey color for shelves
-
-        // Function to create a single shelf unit
-        const createShelf = (x, z) => {
-            const shelfGroup = new THREE.Group(); // Use a group to manage all parts of a shelf as one object
-
-            // Shelf uprights (vertical supports)
-            const uprightGeometry = new THREE.BoxGeometry(shelfThickness, shelfHeight, shelfThickness);
-            const shelfMaterial = new THREE.MeshStandardMaterial({ color: shelfColor });
-
-            // Create four uprights for the corners of the shelf
-            [-shelfLength / 2 + shelfThickness / 2, shelfLength / 2 - shelfThickness / 2].forEach(lx => {
-                [-shelfDepth / 2 + shelfThickness / 2, shelfDepth / 2 - shelfThickness / 2].forEach(lz => {
-                    const upright = new THREE.Mesh(uprightGeometry, shelfMaterial);
-                    upright.position.set(lx, shelfHeight / 2 - 0.5, lz); // Position uprights relative to shelf group center
-                    shelfGroup.add(upright);
-                });
+        // HDRI Loading
+        new RGBELoader()
+            .setPath('/textures/hdri/')
+            .load('studio_small_03_1k.hdr', function (texture) {
+                texture.mapping = THREE.EquirectangularReflectionMapping;
+                scene.environment = texture;
+            }, undefined, (error) => {
+                console.error('An error occurred loading the HDRI:', error);
+                if (!scene.environment) scene.background = new THREE.Color(0xf0f0f0);
             });
 
-            // Actual shelf planks (horizontal surfaces)
-            const singleShelfGeometry = new THREE.BoxGeometry(shelfLength, shelfThickness, shelfDepth);
-            for (let i = 0; i < 3; i++) { // Create 3 levels of shelves
-                const shelf = new THREE.Mesh(singleShelfGeometry, shelfMaterial);
-                // Position each shelf plank vertically within the unit
-                shelf.position.set(0, (i * (shelfHeight / 3)) + shelfThickness / 2 - 0.5, 0);
-                shelfGroup.add(shelf);
-            }
+        // Camera setup
+        const container = mountRef.current;
+        const initialWidth = container.clientWidth;
+        const initialHeight = Math.min(container.clientHeight || 400, 600);
+        cameraRef.current = new THREE.PerspectiveCamera(75, initialWidth / initialHeight, 0.1, 1000);
+        cameraRef.current.position.set(0, 3, 7);
+        cameraRef.current.lookAt(0, 0.5, 0);
+        
+        // Renderer setup
+        rendererRef.current = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        rendererRef.current.shadowMap.enabled = true;
+        rendererRef.current.shadowMap.type = THREE.PCFSoftShadowMap;
+        rendererRef.current.outputColorSpace = THREE.SRGBColorSpace;
+        rendererRef.current.toneMapping = THREE.ACESFilmicToneMapping;
+        rendererRef.current.toneMappingExposure = 1;
+        rendererRef.current.setSize(initialWidth, initialHeight);
+        container.appendChild(rendererRef.current.domElement);
 
-            shelfGroup.position.set(x, 0, z); // Position the entire shelf unit in the scene
-            scene.add(shelfGroup);
-            return shelfGroup; // Return for potential future reference, though not used in this version
-        };
+        // OrbitControls setup
+        controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
+        controlsRef.current.enableDamping = true;
+        controlsRef.current.dampingFactor = 0.05;
+        controlsRef.current.minDistance = 2;
+        controlsRef.current.maxDistance = 20;
+        controlsRef.current.maxPolarAngle = Math.PI / 2 - 0.05;
+        controlsRef.current.target.set(0, 0.5, 0);
 
-        // Create two aisles of shelves
-        createShelf(-2.5, 0); // Aisle 1, positioned to the left
-        createShelf(2.5, 0);  // Aisle 2, positioned to the right
+        // Floor plane
+        const floorGeometry = new THREE.PlaneGeometry(20, 20);
+        const floorAlbedo = new THREE.TextureLoader().load('/textures/floor/concrete_tiles_albedo.png', tex => { tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8,8); });
+        const floorNormal = new THREE.TextureLoader().load('/textures/floor/concrete_tiles_normal.png', tex => { tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8,8); });
+        const floorRoughness = new THREE.TextureLoader().load('/textures/floor/concrete_tiles_roughness.png', tex => { tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(8,8); });
+        const floorMaterial = new THREE.MeshStandardMaterial({ map: floorAlbedo, normalMap: floorNormal, roughnessMap: floorRoughness, side: THREE.DoubleSide });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.5;
+        floor.receiveShadow = true;
+        scene.add(floor);
 
-        // Lighting setup for the scene
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Soft white ambient light, illuminates all objects equally
-        scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8); // Directional light, like sunlight
-        directionalLight.position.set(5, 10, 7.5); // Positioned to cast some shadows and highlights
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight.position.set(10, 15, 10); directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.set(2048, 2048);
+        directionalLight.shadow.camera.near = 0.5; directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.camera.left = -15; directionalLight.shadow.camera.right = 15;
+        directionalLight.shadow.camera.top = 15; directionalLight.shadow.camera.bottom = -15;
         scene.add(directionalLight);
+        const createAisleSpotlight = (x, z) => {
+            const spotLight = new THREE.SpotLight(0xffffff, 1.5, 15, Math.PI / 4, 0.3, 1.5);
+            spotLight.position.set(x, 5, z); spotLight.target.position.set(x, 0, z);
+            spotLight.castShadow = true; spotLight.shadow.mapSize.set(1024, 1024);
+            spotLight.shadow.camera.near = 1; spotLight.shadow.camera.far = 15;
+            scene.add(spotLight); scene.add(spotLight.target);
+        };
+        createAisleSpotlight(-1.5, 0); createAisleSpotlight(1.5, 0);
 
-        // Group to hold all product hotspots for easier management (e.g., raycasting, animations)
-        const productHotspots = new THREE.Group();
-        scene.add(productHotspots);
-
-        // Dynamically add product hotspots to the scene based on inventory data
-        inventory.forEach((item, index) => {
-            if (item.status !== 'Fresh') { // Only create hotspots for items that are not 'Fresh'
-                const productGeometry = new THREE.BoxGeometry(0.3, 0.4, 0.3); // Small box to represent a product
-                const hotspotMaterial = new THREE.MeshBasicMaterial({ 
-                    color: item.status === 'Donation Alert' ? 0xff0000 : 0xffc220 // Red for donation, Yellow for discount
-                });
-                const hotspot = new THREE.Mesh(productGeometry, hotspotMaterial);
-                hotspot.userData = { type: 'product', itemDetails: item }; // Store item data for displaying in tooltip
-
-                hotspot.scale.set(0.01, 0.01, 0.01); // Initial small scale for entry animation
-
-                // Logic to distribute hotspots on the shelves
-                const aisleX = index % 2 === 0 ? -2.5 : 2.5; // Alternate between left and right aisles
-                const shelfLevel = Math.floor(index / 2) % 3; // Cycle through the 3 shelf levels
-                const positionOnShelf = ((index % 4) * 1) - (shelfLength / 2) + 0.5; // Distribute along the length of the shelf
-
-                hotspot.position.set(
-                    aisleX + (index % 2 === 0 ? 0.2 : -0.2), // Position on the correct aisle, slightly offset for visibility
-                    (shelfLevel * (shelfHeight / 3)) + shelfThickness -0.2, // Position on the correct shelf level
-                    positionOnShelf // Position along the shelf length
-                );
-                productHotspots.add(hotspot); // Add the hotspot to the group
-
-                // GSAP animation for hotspot entry: scales the hotspot from small to full size
-                gsap.to(hotspot.scale, {
-                    x: 1, y: 1, z: 1, // Target scale
-                    duration: 0.5, // Animation duration
-                    delay: index * 0.05, // Stagger animations for multiple items appearing at once
-                    ease: 'back.out(1.7)', // Springy ease-out effect
-                });
-            }
+        // Asset Loading
+        const loader = new GLTFLoader();
+        const productModelPaths = ['/models/products/soda_can.gltf', '/models/products/cereal_box.gltf', '/models/products/milk_carton.gltf'];
+        const productPromises = productModelPaths.map(path => new Promise((resolve, reject) => {
+            loader.load(path, (gltf) => {
+                gltf.scene.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; }});
+                resolve(gltf.scene);
+            }, undefined, reject);
+        }));
+        const shelfPromise = new Promise((resolve, reject) => {
+            loader.load('/models/shelf/shelf_aisle.gltf', (gltf) => {
+                const shelfModelSource = gltf.scene;
+                shelfModelSource.traverse(child => { if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }});
+                const aisle1 = shelfModelSource.clone(); aisle1.position.set(-1.5, -0.5, 0);
+                const aisle2 = shelfModelSource.clone(); aisle2.position.set(1.5, -0.5, 0);
+                scene.add(aisle1); scene.add(aisle2);
+                resolve([aisle1, aisle2]);
+            }, undefined, reject);
         });
 
-        // Set initial camera position and where it looks
-        camera.position.set(0, 3, 7);
-        camera.lookAt(0, 0.5, 0); // Look at the center of the shelf area
+        Promise.all([...productPromises, shelfPromise])
+            .then((results) => {
+                const resolvedModels = results.slice(0, -1);
+                const resolvedAisles = results[results.length - 1];
+                loadedProductModels.current = resolvedModels;
+                aislesRef.current = resolvedAisles;
+                setAssetsReady(true); // Signal that assets are ready
+                console.log("All 3D assets loaded successfully.");
+            })
+            .catch(error => console.error("Error loading 3D assets:", error));
 
-        // Mouse move event listener for raycasting (detecting hovers)
+        // Animation Loop
+        let animationFrameId;
+        const animate = () => {
+            animationFrameId = requestAnimationFrame(animate);
+            if (controlsRef.current) controlsRef.current.update();
+
+            // Raycasting
+            if (cameraRef.current && productHotspotsRef.current && rendererRef.current) {
+                raycasterRef.current.setFromCamera(mouseRef.current, cameraRef.current);
+                const intersects = raycasterRef.current.intersectObjects(productHotspotsRef.current.children, true);
+                if (intersects.length > 0) {
+                    const firstIntersected = intersects[0].object.userData.isProductRoot ? intersects[0].object : intersects[0].object.parent; // Assuming product root has this flag
+                    if (intersectedRef.current !== firstIntersected) {
+                        if (intersectedRef.current && intersectedRef.current.material) { // Check material exists
+                           if(intersectedRef.current.originalEmissiveHex) intersectedRef.current.material.emissive.setHex(intersectedRef.current.originalEmissiveHex);
+                        }
+                        intersectedRef.current = firstIntersected;
+                        if (intersectedRef.current && intersectedRef.current.material) { // Check material exists
+                            intersectedRef.current.originalEmissiveHex = intersectedRef.current.material.emissive.getHex();
+                            intersectedRef.current.material.emissive.setHex(0x555555);
+                        }
+                        if (firstIntersected && firstIntersected.userData.itemDetails) {
+                            const { itemDetails } = firstIntersected.userData;
+                            let priceInfo = '';
+                            if (itemDetails.discountedPrice !== null && itemDetails.discountedPrice < itemDetails.originalPrice) {
+                                priceInfo = `Price: <span style="text-decoration: line-through; color: #bbb;">$${itemDetails.originalPrice.toFixed(2)}</span> <strong style="color: lightgreen;">$${itemDetails.discountedPrice.toFixed(2)}</strong>`;
+                            } else {
+                                priceInfo = `Price: $${itemDetails.price.toFixed(2)}`;
+                            }
+                            const tooltipContent = `<strong>${itemDetails.name}</strong><br/>${priceInfo}<br/>Status: ${itemDetails.status}<br/>Expiry: ${itemDetails.expiryDate||'N/A'}`;
+                            const canvasRect = rendererRef.current.domElement.getBoundingClientRect();
+                            setTooltip({ visible: true, content: tooltipContent, x: mouseRef.current.clientX - canvasRect.left + 10, y: mouseRef.current.clientY - canvasRect.top + 10 });
+                        }
+                    }
+                } else {
+                    if (intersectedRef.current && intersectedRef.current.material) {
+                        // Check if originalEmissiveHex exists before trying to set it
+                        if (intersectedRef.current.material.emissive && typeof intersectedRef.current.originalEmissiveHex !== 'undefined') {
+                           intersectedRef.current.material.emissive.setHex(intersectedRef.current.originalEmissiveHex);
+                        }
+                    }
+                    intersectedRef.current = null;
+                    setTooltip(prev => ({ ...prev, visible: false }));
+                }
+            }
+            if (rendererRef.current && sceneRef.current && cameraRef.current) {
+                 rendererRef.current.render(sceneRef.current, cameraRef.current);
+            }
+        };
+        animate();
+
+        // Event Listeners
         const onDocumentMouseMove = (event) => {
             event.preventDefault();
-            // Calculate mouse position in normalized device coordinates (-1 to +1) for raycaster
-            const rect = renderer.domElement.getBoundingClientRect(); // Get canvas bounds
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            mouse.clientX = event.clientX; // Store raw clientX for tooltip positioning
-            mouse.clientY = event.clientY; // Store raw clientY for tooltip positioning
+            if (!rendererRef.current || !rendererRef.current.domElement) return;
+            const rect = rendererRef.current.domElement.getBoundingClientRect();
+            mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            mouseRef.current.clientX = event.clientX;
+            mouseRef.current.clientY = event.clientY;
         };
-        renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
+        const currentDomElement = rendererRef.current.domElement; // Capture for cleanup
+        currentDomElement.addEventListener('mousemove', onDocumentMouseMove, false);
 
-        // Render loop function: handles raycasting, object highlighting, and tooltip updates
-        const renderScene = () => {
-            raycaster.setFromCamera(mouse, camera); // Update the picking ray from camera and mouse position
-            const intersects = raycaster.intersectObjects(productHotspots.children, true); // Check for intersections with hotspots
-
-            if (intersects.length > 0) { // If mouse hovers over a hotspot
-                if (INTERSECTED !== intersects[0].object) { // If it's a new object being hovered
-                    if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex); // Restore previous hovered object's emissive color
-
-                    INTERSECTED = intersects[0].object; // Set new hovered object
-                    INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex(); // Store its original emissive color
-                    INTERSECTED.material.emissive.setHex(0x555555); // Highlight with a grey emissive color
-
-                    const { itemDetails } = INTERSECTED.userData; // Get item data for tooltip
-                    const tooltipContent = `
-                        <strong>${itemDetails.name}</strong><br/>
-                        Status: ${itemDetails.status}<br/>
-                        Expiry: ${itemDetails.expiryDate || 'N/A'}<br/>
-                        Discount: ${itemDetails.discount || 'N/A'}
-                    `;
-                    // Calculate position for tooltip
-                    const canvasRect = renderer.domElement.getBoundingClientRect();
-                    setTooltip({
-                        visible: true,
-                        content: tooltipContent,
-                        x: event.clientX - canvasRect.left + 10, // offset from mouse
-                        y: event.clientY - canvasRect.top + 10  // offset from mouse
-                    });
-                }
-            } else {
-                if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-                INTERSECTED = null;
-                setTooltip(prev => ({ ...prev, visible: false }));
-            }
-            }
-            renderer.render(scene, camera);
-        };
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            controls.update(); // only required if controls.enableDamping or controls.autoRotate are set to true
-            renderScene();
-        };
-
-        renderer.domElement.addEventListener('mousemove', onDocumentMouseMove, false);
-
-        // Handle window resize
         const handleResize = () => {
-            width = container.clientWidth;
-            height = Math.min(container.clientHeight || 400, 600);
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
+            if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
+            const newWidth = mountRef.current.clientWidth;
+            const newHeight = Math.min(mountRef.current.clientHeight || 400, 600);
+            cameraRef.current.aspect = newWidth / newHeight;
+            cameraRef.current.updateProjectionMatrix();
+            rendererRef.current.setSize(newWidth, newHeight);
         };
         window.addEventListener('resize', handleResize);
 
-        animate();
-
+        // Cleanup
         return () => {
+            cancelAnimationFrame(animationFrameId);
             window.removeEventListener('resize', handleResize);
-            renderer.domElement.removeEventListener('mousemove', onDocumentMouseMove, false);
-            controls.dispose(); // Dispose of OrbitControls
-            if (container && container.contains(renderer.domElement)) {
-                container.removeChild(renderer.domElement);
+            if (currentDomElement) {
+                currentDomElement.removeEventListener('mousemove', onDocumentMouseMove, false);
             }
-            // Dispose of Three.js objects
-            scene.traverse(object => {
+            if (controlsRef.current) controlsRef.current.dispose();
+
+            if (productHotspotsRef.current && productHotspotsRef.current.children) {
+                productHotspotsRef.current.children.forEach(child => gsap.killTweensOf(child.scale));
+            }
+
+            sceneRef.current.traverse(object => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
                     if (Array.isArray(object.material)) {
-                        object.material.forEach(material => material.dispose());
+                        object.material.forEach(material => {
+                            Object.values(material).forEach(value => { if (value instanceof THREE.Texture) value.dispose(); });
+                            material.dispose();
+                        });
                     } else {
+                        Object.values(object.material).forEach(value => { if (value instanceof THREE.Texture) value.dispose(); });
                         object.material.dispose();
                     }
                 }
             });
-            renderer.dispose();
+            if(sceneRef.current.environment && sceneRef.current.environment.dispose) sceneRef.current.environment.dispose();
+
+            if (rendererRef.current) rendererRef.current.dispose();
+            if (mountRef.current && rendererRef.current && mountRef.current.contains(rendererRef.current.domElement)) {
+                 mountRef.current.removeChild(rendererRef.current.domElement);
+            }
+            sceneRef.current = null; // Help GC
+            cameraRef.current = null;
+            rendererRef.current = null;
+            controlsRef.current = null;
+            productHotspotsRef.current = null;
+            loadedProductModels.current = [];
+            aislesRef.current = [];
+            setAssetsReady(false);
         };
-    }, [inventory]); // Re-render when inventory changes
+    }, []); // Empty dependency array: runs once on mount
+
+    // Effect for processing inventory items
+    const processInventoryItems = useCallback(() => {
+        if (!assetsReady || !sceneRef.current || !productHotspotsRef.current || aislesRef.current.length === 0 || loadedProductModels.current.length === 0) {
+            return;
+        }
+        const productHotspots = productHotspotsRef.current;
+
+        while(productHotspots.children.length > 0){
+            const oldProduct = productHotspots.children[0];
+            productHotspots.remove(oldProduct);
+            // Cloned GLTF children share geometry/material, so no need to dispose them individually here
+            // unless materials were cloned per instance and need individual disposal.
+        }
+
+        inventory.forEach((item, index) => {
+            if (item.status !== 'Fresh') {
+                const productModelTemplate = loadedProductModels.current[index % loadedProductModels.current.length];
+                if (!productModelTemplate) return;
+
+                const productInstance = productModelTemplate.clone(true); // Deep clone
+                productInstance.userData.isProductRoot = true; // Flag for raycasting parent
+                productInstance.userData.itemDetails = item;
+
+                const aisleIndex = index % 2;
+                const targetAisle = aislesRef.current[aisleIndex];
+                if (!targetAisle) return;
+
+                const itemsPerShelfLevel = 4;
+                const shelfLevelIndex = Math.floor((index / 2) / itemsPerShelfLevel) % 3;
+                const positionInLevel = (index / 2) % itemsPerShelfLevel;
+
+                const shelfBaseY = 0.2; const shelfLevelHeight = 0.6;
+                const shelfDepthOffset = 0.2; const itemSpacingX = 0.5;
+                const shelfLength = 2.0;
+
+                const localX = (positionInLevel * itemSpacingX) - (shelfLength / 2) + (itemSpacingX / 2);
+                const localY = shelfBaseY + (shelfLevelIndex * shelfLevelHeight);
+                const localZ = aisleIndex === 0 ? shelfDepthOffset : -shelfDepthOffset; // This might need adjustment based on aisle model orientation
+
+                // Position relative to the aisle's origin, then convert to world (if aisle is not at 0,0,0)
+                // Or, more simply, if aisle objects are added directly to scene and positioned, add product to aisle.
+                // For now, assuming aisles are at their world positions, and product position is set relative to aisle's world pos.
+                productInstance.position.set(localX, localY, localZ);
+                productInstance.position.add(targetAisle.position);
+
+
+                const baseScale = 0.3; // Adjust this based on your models
+                productInstance.scale.set(baseScale, baseScale, baseScale);
+
+                const statusColor = item.status === 'Donation Alert' ? 0xff0000 : 0xffc220;
+                productInstance.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        const originalMaterial = child.material;
+                        child.material = originalMaterial.clone(); // Clone material to avoid affecting other instances or template
+
+                        if (item.status === 'Donation Alert') {
+                            child.material.color.set(0xff0000); // Base red color
+                            child.material.emissive = new THREE.Color(0xcc0000); // Emissive red, slightly darker to avoid pure whiteout
+                            child.material.emissiveIntensity = 0.6; // Adjust intensity for desired glow
+                        } else if (item.status === 'Discount') {
+                            child.material.color.set(0xffc220); // Yellow base color
+                            // Ensure emissive is off or very low for discount items if not desired
+                            if (child.material.emissive) {
+                                child.material.emissive.set(0x000000);
+                            }
+                        } else {
+                            // For other statuses, inherit original material color or set a default
+                            // This part depends on whether non-alert/discount items should also be tinted
+                            // If productModelTemplate has its own colors, this will use them.
+                            // If we want to ensure no tint from previous states:
+                            // child.material.color.copy(originalMaterial.color);
+                            // if (child.material.emissive) child.material.emissive.copy(originalMaterial.emissive || new THREE.Color(0x000000));
+                        }
+                    }
+                });
+
+                const initialAnimScale = 0.01;
+                productInstance.scale.set(initialAnimScale, initialAnimScale, initialAnimScale);
+                productHotspots.add(productInstance);
+
+                gsap.to(productInstance.scale, {
+                    x: baseScale, y: baseScale, z: baseScale,
+                    duration: 0.5, delay: index * 0.05, ease: 'back.out(1.7)',
+                });
+            }
+        });
+    }, [inventory, assetsReady]); // assetsReady is key here
+
+    useEffect(() => {
+        if (assetsReady) {
+            processInventoryItems();
+        }
+    }, [assetsReady, inventory, processInventoryItems]);
+
 
     return (
-        <div ref={mountRef} style={{ width: '100%', height: '400px', position: 'relative' }}>
+        <div ref={mountRef} style={{ width: '100%', height: '400px', position: 'relative', cursor: 'grab' }}>
             {tooltip.visible && (
                 <div
                     className="tooltip3d"
