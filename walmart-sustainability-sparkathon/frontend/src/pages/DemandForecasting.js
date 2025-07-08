@@ -4,10 +4,10 @@ import './DemandForecasting.css';
 
 function DemandForecasting() {
   const [forecastInput, setForecastInput] = useState({
-    store_id: '1',
-    product_id: '3',
-    promotion_applied: false,
-    is_holiday: false,
+    store_id: '1', // Default store
+    product_id: '3', // Default product
+    forecast_days: '7', // Default forecast period
+    historical_days: '30', // Default historical period
   });
   const [forecastResult, setForecastResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,56 +17,50 @@ function DemandForecasting() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    setForecastResult(null);
+    setForecastResult(null); // Clear previous results
 
     try {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const getDayOfYear = (date) => {
-        const start = new Date(date.getFullYear(), 0, 0);
-        const diff = (date - start) + ((start.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000);
-        const oneDay = 1000 * 60 * 60 * 24;
-        return Math.floor(diff / oneDay);
-      };
-
-      const features = {
-        store_id: parseInt(forecastInput.store_id),
-        product_id: parseInt(forecastInput.product_id),
-        is_weekend: (tomorrow.getDay() === 6 || tomorrow.getDay() === 0) ? 1 : 0,
-        is_holiday: forecastInput.is_holiday ? 1 : 0,
-        promotion_applied: forecastInput.promotion_applied ? 1 : 0,
-        day_of_year: getDayOfYear(tomorrow),
-        month: tomorrow.getMonth() + 1,
-        year: tomorrow.getFullYear(),
-        day_of_week: tomorrow.getDay(),
-      };
-
-      const response = await fetch('http://localhost:8000/predict_daily_sales', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(features)
+      const { store_id, product_id, forecast_days, historical_days } = forecastInput;
+      const queryParams = new URLSearchParams({
+        store_id,
+        product_id,
+        forecast_days,
+        historical_days
       });
 
-      if (!response.ok) throw new Error('AI model did not respond.');
+      // Using the new API endpoint and GET method
+      const response = await fetch(`http://localhost:8000/api/demand-forecast/time-series?${queryParams.toString()}`, {
+        method: 'GET', // Changed to GET
+        headers: { 'Content-Type': 'application/json' },
+        // No body for GET request
+      });
+
+      if (!response.ok) {
+        // Try to parse error message from backend if available
+        let errorMsg = 'AI model did not respond or an error occurred.';
+        try {
+            const errorData = await response.json();
+            if (errorData && errorData.error) {
+                errorMsg = errorData.error;
+            }
+        } catch (parseError) {
+            // Ignore if response is not JSON or empty
+        }
+        throw new Error(errorMsg);
+      }
       
       const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) { // Should be caught by !response.ok if backend uses proper status codes
+          throw new Error(data.error);
+      }
       
-      // Add some dummy historical data for the chart visualization
-      const historical_sales = [
-          Math.floor(data.predicted_sales * 0.8),
-          Math.floor(data.predicted_sales * 1.1),
-          Math.floor(data.predicted_sales * 0.9),
-          Math.floor(data.predicted_sales * 1.2),
-          Math.floor(data.predicted_sales * 0.7),
-          Math.floor(data.predicted_sales * 1.3),
-          Math.floor(data.predicted_sales * 1.0),
-      ];
-      setForecastResult({ ...data, historical_sales });
+      // The API is now expected to return historical_data and forecasted_data arrays
+      // and other fields as defined in API requirements.
+      setForecastResult(data);
 
     } catch (err) {
       setError(err.message);
+      console.error("Error fetching forecast:", err); // Log the full error for debugging
     }
     setIsLoading(false);
   };
@@ -94,28 +88,76 @@ function DemandForecasting() {
                         <option value="4">Product_4</option>
                     </select>
 
-                    <div className="checkbox-group">
-                        <input type="checkbox" id="promo" checked={forecastInput.promotion_applied} onChange={e => setForecastInput({...forecastInput, promotion_applied: e.target.checked})} />
-                        <label htmlFor="promo">Is a promotion active tomorrow?</label>
-                    </div>
-                     <div className="checkbox-group">
-                        <input type="checkbox" id="holiday" checked={forecastInput.is_holiday} onChange={e => setForecastInput({...forecastInput, is_holiday: e.target.checked})} />
-                        <label htmlFor="holiday">Is tomorrow a holiday?</label>
-                    </div>
+                    <label htmlFor="forecast_days">Forecast Period</label>
+                    <select id="forecast_days" value={forecastInput.forecast_days} onChange={e => setForecastInput({...forecastInput, forecast_days: e.target.value})}>
+                        <option value="7">Next 7 Days</option>
+                        <option value="14">Next 14 Days</option>
+                        <option value="30">Next 30 Days</option>
+                        <option value="90">Next 90 Days</option>
+                    </select>
 
-                    <button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Calculating...' : 'Forecast Tomorrow\'s Sales'}
+                    <label htmlFor="historical_days">Historical Data to Display</label>
+                    <select id="historical_days" value={forecastInput.historical_days} onChange={e => setForecastInput({...forecastInput, historical_days: e.target.value})}>
+                        <option value="30">Last 30 Days</option>
+                        <option value="60">Last 60 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+
+                    <button type="submit" disabled={isLoading} style={{marginTop: '1rem'}}>
+                      {isLoading ? 'Fetching Forecast...' : 'Get Demand Forecast'}
                     </button>
                 </form>
             </div>
             <div className="forecast-results">
-                <h3>Forecast Visualization</h3>
+                <h3>Forecast Results</h3>
                 {isLoading && <p>Loading...</p>}
                 {error && <p className="error-message" style={{color: 'red'}}>{error}</p>}
-                {forecastResult ? (
-                    <DemandChart forecastData={forecastResult} />
-                ) : (
-                    !isLoading && <div className="chart-placeholder">Set parameters and run a forecast.</div>
+                {forecastResult && forecastResult.forecasted_data && (
+                    <>
+                        {forecastResult.summary && (
+                            <div className="forecast-summary">
+                                <h4>Forecast Summary (Next {forecastInput.forecast_days} Days)</h4>
+                                <p><strong>Total Predicted Sales:</strong> {forecastResult.summary.total_forecasted_sales?.toLocaleString() || 'N/A'} units</p>
+                                <p><strong>Average Daily Prediction:</strong> {forecastResult.summary.average_daily_forecast?.toLocaleString(undefined, {maximumFractionDigits: 1}) || 'N/A'} units/day</p>
+                            </div>
+                        )}
+                        <h4>Daily Breakdown:</h4>
+                        <div className="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Predicted Sales</th>
+                                        <th>Confidence</th>
+                                        <th>Notes/Factors</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {forecastResult.forecasted_data.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td>{new Date(item.date).toLocaleDateString()}</td>
+                                            <td>{item.predicted_sales?.toLocaleString()}</td>
+                                            <td>{item.confidence_score ? (item.confidence_score * 100).toFixed(0) + '%' : 'N/A'}</td>
+                                            <td>
+                                                {item.notes || ''}
+                                                {item.factors && item.factors.length > 0 ? (
+                                                    <>
+                                                        {item.notes ? <br /> : ''}
+                                                        Factors: {item.factors.join(', ')}
+                                                    </>
+                                                ) : ''}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* DemandChart will be handled in the next step, possibly passing different props */}
+                        <DemandChart forecastData={forecastResult} />
+                    </>
+                )}
+                {!forecastResult && !isLoading && !error && (
+                    <div className="chart-placeholder">Set parameters and run a forecast to see results.</div>
                 )}
             </div>
         </div>
