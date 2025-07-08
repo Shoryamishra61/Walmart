@@ -1,0 +1,16 @@
+.tooltip3d {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none; /* So it doesn't interfere with mouse events on the canvas */
+    z-index: 100;
+    white-space: nowrap; /* Keep content on one line unless <br/> is used */
+}
+
+.tooltip3d strong {
+    font-weight: bold;
+    color: #61dafb; /* A slightly thematic color */
+}
