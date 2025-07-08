@@ -12,10 +12,30 @@ function LiveOperations() {
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [errorInitial, setErrorInitial] = useState(null);
 
+  const isNearingExpiry = (expiryDateStr) => {
+    if (!expiryDateStr || expiryDateStr === 'N/A') {
+      return false;
+    }
+    const expiryDate = new Date(expiryDateStr);
+    const today = new Date();
+    const sevenDaysFromNow = new Date(today);
+    sevenDaysFromNow.setDate(today.getDate() + 7);
+
+    return expiryDate >= today && expiryDate <= sevenDaysFromNow;
+  };
+
   useEffect(() => {
     // Listen for real-time updates from the smart shelves
     socket.on('full_inventory_update', (updatedInventory) => {
-      setInventory(updatedInventory.map(item => ({...item, price: parseFloat(item.price)})));
+      setInventory(updatedInventory.map(item => ({
+        ...item,
+        price: parseFloat(item.price) || 0,
+        originalPrice: parseFloat(item.originalPrice) || parseFloat(item.price) || 0, // Fallback to price if originalPrice missing
+        discountedPrice: item.discountedPrice !== undefined ? parseFloat(item.discountedPrice) : null,
+        discountPercentage: parseFloat(item.discountPercentage) || 0,
+        expiryDate: item.expiryDate || 'N/A', // Default if missing
+        status: item.status || 'Unknown',
+      })));
     });
 
     // Fetch the initial state of the inventory
@@ -26,7 +46,15 @@ function LiveOperations() {
             const res = await fetch('http://localhost:3001/api/inventory');
             if (!res.ok) throw new Error(`Failed to fetch initial inventory: ${res.statusText}`);
             const data = await res.json();
-            setInventory(data.map(item => ({...item, price: parseFloat(item.price)})));
+            setInventory(data.map(item => ({
+                ...item,
+                price: parseFloat(item.price) || 0,
+                originalPrice: parseFloat(item.originalPrice) || parseFloat(item.price) || 0,
+                discountedPrice: item.discountedPrice !== undefined ? parseFloat(item.discountedPrice) : null,
+                discountPercentage: parseFloat(item.discountPercentage) || 0,
+                expiryDate: item.expiryDate || 'N/A',
+                status: item.status || 'Unknown',
+            })));
         } catch (error) {
             console.error("Error fetching initial inventory:", error);
             setErrorInitial(error.message);
@@ -83,26 +111,46 @@ function LiveOperations() {
                     <tr>
                       <th>Product</th>
                       <th>Price</th>
+                      <th>Offer Price</th> {/* New Column for Discounted Price */}
                       <th>Status</th>
+                      <th>Expiry Date</th>
                       <th>Ethical Score</th>
                       <th>Scan Passport</th>
                     </tr>
                   </thead>
                   <tbody>
                     {isLoadingInitial && (
-                        <tr><td colSpan="5" style={{ textAlign: 'center' }}>Loading live inventory...</td></tr>
+                        <tr><td colSpan="7" style={{ textAlign: 'center' }}>Loading live inventory...</td></tr> {/* Updated colSpan */}
                     )}
                     {errorInitial && (
-                        <tr><td colSpan="5" style={{ textAlign: 'center', color: 'red' }}>Error: {errorInitial}</td></tr>
+                        <tr><td colSpan="7" style={{ textAlign: 'center', color: 'red' }}>Error: {errorInitial}</td></tr> {/* Updated colSpan */}
                     )}
                     {!isLoadingInitial && !errorInitial && inventory.length === 0 && (
-                        <tr><td colSpan="5" style={{ textAlign: 'center' }}>No inventory items to display.</td></tr>
+                        <tr><td colSpan="7" style={{ textAlign: 'center' }}>No inventory items to display.</td></tr> {/* Updated colSpan */}
                     )}
                     {!isLoadingInitial && !errorInitial && inventory.map(item => (
                       <tr key={item.id} className={`status-${item.status.replace(/\s+/g, '-').toLowerCase()}`}>
                         <td>{item.name}</td>
-                        <td>${item.price.toFixed(2)}</td>
+                        <td> {/* Price Column - shows original if discounted, else current price */}
+                          {item.discountedPrice !== null && item.discountedPrice < item.originalPrice ? (
+                            <>
+                              <span style={{ textDecoration: 'line-through', color: '#888' }}>
+                                ${item.originalPrice.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            `$${item.price.toFixed(2)}`
+                          )}
+                        </td>
+                        <td> {/* Offer Price Column */}
+                          {item.discountedPrice !== null && item.discountedPrice < item.originalPrice ? (
+                            <strong style={{ color: 'green' }}>${item.discountedPrice.toFixed(2)}</strong>
+                          ) : (
+                            'N/A'
+                          )}
+                        </td>
                         <td>{item.status}</td>
+                        <td className={isNearingExpiry(item.expiryDate) ? 'nearing-expiry' : ''}>{item.expiryDate}</td>
                         <td>{item.ethical_sourcing_score || 'N/A'}</td>
                         <td>
                             <button className="scan-button" onClick={() => handleScanProduct(item.id)}>

@@ -154,14 +154,23 @@ const ThreeDVisualization = ({ inventory }) => {
                         }
                         if (firstIntersected && firstIntersected.userData.itemDetails) {
                             const { itemDetails } = firstIntersected.userData;
-                            const tooltipContent = `<strong>${itemDetails.name}</strong><br/>Status: ${itemDetails.status}<br/>Expiry: ${itemDetails.expiryDate||'N/A'}<br/>Discount: ${itemDetails.discount||'N/A'}`;
+                            let priceInfo = '';
+                            if (itemDetails.discountedPrice !== null && itemDetails.discountedPrice < itemDetails.originalPrice) {
+                                priceInfo = `Price: <span style="text-decoration: line-through; color: #bbb;">$${itemDetails.originalPrice.toFixed(2)}</span> <strong style="color: lightgreen;">$${itemDetails.discountedPrice.toFixed(2)}</strong>`;
+                            } else {
+                                priceInfo = `Price: $${itemDetails.price.toFixed(2)}`;
+                            }
+                            const tooltipContent = `<strong>${itemDetails.name}</strong><br/>${priceInfo}<br/>Status: ${itemDetails.status}<br/>Expiry: ${itemDetails.expiryDate||'N/A'}`;
                             const canvasRect = rendererRef.current.domElement.getBoundingClientRect();
                             setTooltip({ visible: true, content: tooltipContent, x: mouseRef.current.clientX - canvasRect.left + 10, y: mouseRef.current.clientY - canvasRect.top + 10 });
                         }
                     }
                 } else {
                     if (intersectedRef.current && intersectedRef.current.material) {
-                        if(intersectedRef.current.originalEmissiveHex) intersectedRef.current.material.emissive.setHex(intersectedRef.current.originalEmissiveHex);
+                        // Check if originalEmissiveHex exists before trying to set it
+                        if (intersectedRef.current.material.emissive && typeof intersectedRef.current.originalEmissiveHex !== 'undefined') {
+                           intersectedRef.current.material.emissive.setHex(intersectedRef.current.originalEmissiveHex);
+                        }
                     }
                     intersectedRef.current = null;
                     setTooltip(prev => ({ ...prev, visible: false }));
@@ -293,11 +302,26 @@ const ThreeDVisualization = ({ inventory }) => {
                 productInstance.traverse((child) => {
                     if (child.isMesh && child.material) {
                         const originalMaterial = child.material;
-                        child.material = originalMaterial.clone();
-                        child.material.color.set(statusColor);
-                        // For emissive:
-                        // child.material.emissive = new THREE.Color(statusColor);
-                        // child.material.emissiveIntensity = 0.6;
+                        child.material = originalMaterial.clone(); // Clone material to avoid affecting other instances or template
+
+                        if (item.status === 'Donation Alert') {
+                            child.material.color.set(0xff0000); // Base red color
+                            child.material.emissive = new THREE.Color(0xcc0000); // Emissive red, slightly darker to avoid pure whiteout
+                            child.material.emissiveIntensity = 0.6; // Adjust intensity for desired glow
+                        } else if (item.status === 'Discount') {
+                            child.material.color.set(0xffc220); // Yellow base color
+                            // Ensure emissive is off or very low for discount items if not desired
+                            if (child.material.emissive) {
+                                child.material.emissive.set(0x000000);
+                            }
+                        } else {
+                            // For other statuses, inherit original material color or set a default
+                            // This part depends on whether non-alert/discount items should also be tinted
+                            // If productModelTemplate has its own colors, this will use them.
+                            // If we want to ensure no tint from previous states:
+                            // child.material.color.copy(originalMaterial.color);
+                            // if (child.material.emissive) child.material.emissive.copy(originalMaterial.emissive || new THREE.Color(0x000000));
+                        }
                     }
                 });
 
